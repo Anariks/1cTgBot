@@ -95,7 +95,7 @@ public class FileController : ControllerBase
             {
                 try
                 {
-                    if (filename == "offers.xml") _databaseService.FillDatabase();
+                    if (filename == "offers.xml") await _databaseService.FillDatabase();
                 }
                 catch (Exception ex)
                 {

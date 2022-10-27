@@ -24,13 +24,13 @@ public class ProductApiClient : IProductApiClient
     {
         var response = await _client.GetAsync($"/wp-json/wc/v3/products/?sku={sku}", cancellationToken);
 
-        if(!response.IsSuccessStatusCode)
+        if (!response.IsSuccessStatusCode)
         {
             return "";
-        } 
-        
+        }
+
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
-        
+
         var productsJson = JArray.Parse(content);
 
         if (productsJson.Count() < 1)

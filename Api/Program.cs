@@ -67,7 +67,8 @@ builder.Services.AddDbContext<BotDbContext>(options =>
     contextLifetime: ServiceLifetime.Transient, 
     optionsLifetime: ServiceLifetime.Singleton);
 
-builder.Services.AddTransient<DataFromXml>();
+builder.Services.AddTransient<RawDataFromXml>();
+builder.Services.AddTransient<OptimizeDataFromXml>();
 builder.Services.AddTransient<Authorization>();
 builder.Services.AddSingleton<IMessagesToUsers, MessageForUsers>();
 builder.Services.AddSingleton<IProductInfoService, ProductInfoService>();

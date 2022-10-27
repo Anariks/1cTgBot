@@ -6,6 +6,7 @@ using Domain.XmlData.Models;
 using System.Globalization;
 using System.Threading;
 using Domain.XmlData;
+using Domain.Services;
 
 namespace Domain.Database;
 public class DataToDatabase
@@ -14,43 +15,11 @@ public class DataToDatabase
     private readonly XmlImportData _xmlImportData;
     private readonly XmlOffersData _xmlOffersData;
 
-    public DataToDatabase(BotDbContext botDbContext, DataFromXml dataFromXml)
+    public DataToDatabase(BotDbContext botDbContext, OptimizeDataFromXml optimizeDataFromXml)
     {
         _context = botDbContext;
-        _xmlImportData = dataFromXml.XmlImportTempData;
-        var xmlOffersDataTemp = dataFromXml.XmlOffersTempData;
-
-        if (xmlOffersDataTemp != null)
-        {
-            xmlOffersDataTemp.ПакетПредложений.Предложения.Предложение =
-                xmlOffersDataTemp.ПакетПредложений.Предложения.Предложение.
-                    Where(x => x.Количество != null).ToList();
-
-            var resultVariations = xmlOffersDataTemp.ПакетПредложений.Предложения.Предложение;
-
-            foreach (var item in resultVariations)
-            {
-                string[]? itemId = new string[2];
-
-                var splittedItem = item.Ид.Split('#');
-
-                itemId[1] = Guid.NewGuid().ToString();
-                item.Ид = splittedItem[0] + "#" + itemId[1];
-
-                if (splittedItem.Count() == 1)
-                {
-                    item.ХарактеристикиТовара = new ХарактеристикиТовара()
-                    {
-                        ХарактеристикаТовара = new ХарактеристикаТовара()
-                        {
-                            Наименование = null,
-                            Значение = item.Наименование
-                        }
-                    };
-                }
-            }
-        }
-        _xmlOffersData = xmlOffersDataTemp;
+        _xmlImportData = optimizeDataFromXml.GetOptimizedImportData();
+        _xmlOffersData = optimizeDataFromXml.GetOptimizedOffersData();
     }
 
     public async Task ClearDatabase()
@@ -123,9 +92,12 @@ public class DataToDatabase
         foreach (var item in resultProducts)
         {
 
-            string? brandGuid = (item.Изготовитель != null)
-                ? item.Изготовитель.Ид
-                : null;
+            string brandGuid = "";
+            if (item.Изготовитель != null)
+            {
+                brandGuid = item.Изготовитель.Ид;
+            }
+
 
             await _context.Products.AddAsync(new Product
             {
