@@ -9,12 +9,12 @@ public class Category
     [Key]
     [MaxLength(36)]
     [Column("id")]
-    public string Id { get; init; }
+    public string? Id { get; init; }
 
     [Required]
     [MaxLength(300)]
     [Column("name")]
-    public string Name { get; init; }
+    public string? Name { get; init; }
 
     [MaxLength(36)]
     [Column("parent_category_id")]

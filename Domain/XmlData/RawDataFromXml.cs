@@ -6,17 +6,17 @@ using Microsoft.Extensions.Logging;
 
 namespace Domain.XmlData;
 
-public class DataFromXml
+public class RawDataFromXml
 {
-    public readonly XmlImportData XmlImportTempData;
-    public readonly XmlOffersData XmlOffersTempData;
+    public readonly XmlImportData XmlImportRawData;
+    public readonly XmlOffersData XmlOffersRawData;
     public const string DirPath = "Uploads\\";
     //private readonly ILogger<DataFromXml> _logger;
 
-    public DataFromXml()
+    public RawDataFromXml()
     {   
-        XmlImportTempData = DeserializeImportXmlToObject();
-        XmlOffersTempData = DeserializeOffersXmlToObject();
+        XmlImportRawData = DeserializeImportXmlToObject();
+        XmlOffersRawData = DeserializeOffersXmlToObject();
        // _logger = logger;
     }
 

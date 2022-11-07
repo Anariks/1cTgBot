@@ -6,6 +6,7 @@ using Domain.XmlData.Models;
 using System.Globalization;
 using System.Threading;
 using Domain.XmlData;
+using Domain.Services;
 
 namespace Domain.Database;
 public class DataToDatabase
@@ -14,70 +15,17 @@ public class DataToDatabase
     private readonly XmlImportData _xmlImportData;
     private readonly XmlOffersData _xmlOffersData;
 
-    public DataToDatabase(BotDbContext botDbContext, DataFromXml dataFromXml)
+    public DataToDatabase(BotDbContext botDbContext, OptimizeDataFromXml optimizeDataFromXml)
     {
         _context = botDbContext;
-        _xmlImportData = dataFromXml.XmlImportTempData;
-        var xmlOffersDataTemp = dataFromXml.XmlOffersTempData;
-
-        if (xmlOffersDataTemp != null)
-        {
-            xmlOffersDataTemp.ПакетПредложений.Предложения.Предложение =
-                xmlOffersDataTemp.ПакетПредложений.Предложения.Предложение.
-                    Where(x => x.Количество != null).ToList();
-
-            var resultVariations = xmlOffersDataTemp.ПакетПредложений.Предложения.Предложение;
-
-            foreach (var item in resultVariations)
-            {
-                string[]? itemId = new string[2];
-
-                var splittedItem = item.Ид.Split('#');
-
-                itemId[1] = Guid.NewGuid().ToString();
-                item.Ид = splittedItem[0] + "#" + itemId[1];
-
-                if (splittedItem.Count() == 1)
-                {
-                    item.ХарактеристикиТовара = new ХарактеристикиТовара()
-                    {
-                        ХарактеристикаТовара = new ХарактеристикаТовара()
-                        {
-                            Наименование = null,
-                            Значение = item.Наименование
-                        }
-                    };
-                }
-            }
-        }
-        _xmlOffersData = xmlOffersDataTemp;
-    }
-
-    public async Task ClearDatabase()
-    {
-        _context.Brands.RemoveRange(_context.Brands);
-        _context.Categories.RemoveRange(_context.Categories);
-        _context.PriceTypes.RemoveRange(_context.PriceTypes);
-        _context.Products.RemoveRange(_context.Products);
-        _context.Storages.RemoveRange(_context.Storages);
-        _context.Variations.RemoveRange(_context.Variations);
-        _context.VariationPrices.RemoveRange(_context.VariationPrices);
-        _context.VariationStocks.RemoveRange(_context.VariationStocks);
-        await _context.SaveChangesAsync();
-        // await _context.Database.ExecuteSqlRawAsync(@"
-        //     TRUNCATE tbl_brands;
-        //     TRUNCATE tbl_categories;
-        //     TRUNCATE tbl_price_types;
-        //     TRUNCATE tbl_products;
-        //     TRUNCATE tbl_storages;
-        //     TRUNCATE tbl_variations;
-        //     TRUNCATE tbl_variation_prices;
-        //     TRUNCATE tbl_variation_stocks;");
-
+        _xmlImportData = optimizeDataFromXml.GetOptimizedImportData();
+        _xmlOffersData = optimizeDataFromXml.GetOptimizedOffersData();
     }
 
     public async Task PushBrandsToDatabase()
     {
+        _context.Brands.RemoveRange(_context.Brands);
+        await _context.SaveChangesAsync();
         var resultBrands = _xmlImportData.Каталог.Товары.Товар.Where(x => x.Изготовитель != null).Select(x => (x.Изготовитель.Ид, x.Изготовитель.Наименование)).Distinct();
 
         await _context.Brands.AddRangeAsync(resultBrands
@@ -94,6 +42,7 @@ public class DataToDatabase
     {
         if (resultCat == null)
         {
+            _context.Categories.RemoveRange(_context.Categories);
             resultCat = _xmlImportData.Классификатор.Categories1c.Category1c;
         }
 
@@ -118,14 +67,16 @@ public class DataToDatabase
 
     public async Task PushProductsToDatabase()
     {
+        _context.Products.RemoveRange(_context.Products);
         var resultProducts = _xmlImportData.Каталог.Товары.Товар;
 
         foreach (var item in resultProducts)
         {
-
-            string? brandGuid = (item.Изготовитель != null)
-                ? item.Изготовитель.Ид
-                : null;
+            string brandGuid = "";
+            if (item.Изготовитель != null)
+            {
+                brandGuid = item.Изготовитель.Ид;
+            }
 
             await _context.Products.AddAsync(new Product
             {
@@ -142,6 +93,8 @@ public class DataToDatabase
 
     public async Task PushVariationsToDatabase()
     {
+        _context.Variations.RemoveRange(_context.Variations);
+
         var result = _xmlOffersData.ПакетПредложений.Предложения.Предложение;
 
         foreach (var item in result)
@@ -159,7 +112,6 @@ public class DataToDatabase
                     ProductId = splittedItem[0],
                     Quantity = quantity
                 }
-
              );
             }
             catch (Exception)
@@ -172,6 +124,7 @@ public class DataToDatabase
 
     public async Task PushVariationPricesToDatabase()
     {
+        _context.VariationPrices.RemoveRange(_context.VariationPrices);
         var result = _xmlOffersData.ПакетПредложений.Предложения.Предложение;
 
         foreach (var item in result)
@@ -197,6 +150,7 @@ public class DataToDatabase
 
     internal async Task PushPriceTypesToDatabase()
     {
+        _context.PriceTypes.RemoveRange(_context.PriceTypes);
         var result = _xmlOffersData.ПакетПредложений.ТипыЦен.ТипЦены;
 
         foreach (var item in result)
@@ -214,6 +168,7 @@ public class DataToDatabase
 
     internal async Task PushVariationStocksToDatabase()
     {
+        _context.VariationStocks.RemoveRange(_context.VariationStocks);
         var result = _xmlOffersData.ПакетПредложений.Предложения.Предложение;
 
         foreach (var item in result)
@@ -239,13 +194,13 @@ public class DataToDatabase
                 }
         );
             }
-
         }
         await _context.SaveChangesAsync();
     }
 
     internal async Task PushStoragesToDatabase()
     {
+        _context.Storages.RemoveRange(_context.Storages);
         var result = _xmlOffersData.ПакетПредложений.Склады.Склад;
 
         foreach (var item in result)

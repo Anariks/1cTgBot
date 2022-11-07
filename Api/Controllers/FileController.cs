@@ -17,12 +17,12 @@ public class FileController : ControllerBase
     private readonly Authorization _authorization;
     private readonly string _dirPath;
 
-    public FileController(DatabaseService DatabaseService, DataFromXml dataFromXml, ILogger<FileController> logger, Authorization authorization)
+    public FileController(DatabaseService DatabaseService, ILogger<FileController> logger, Authorization authorization)
     {
         _databaseService = DatabaseService;
         _logger = logger;
         _authorization = authorization;
-        _dirPath = DataFromXml.DirPath;
+        _dirPath = RawDataFromXml.DirPath;
     }
 
     [HttpPost("api/file")]
@@ -79,6 +79,7 @@ public class FileController : ControllerBase
         {
             if (_authorization.IsAuthorized(Request))
             {
+                _logger.LogInformation("Data exchange started");
                 return Ok("success\nCookieNameGetXML\nCookieValueGetXML");
             }
 
@@ -95,7 +96,8 @@ public class FileController : ControllerBase
             {
                 try
                 {
-                    if (filename == "offers.xml") _databaseService.FillDatabase();
+                    if (filename == "offers.xml") _databaseService.FillDatabase().Wait();
+                    _logger.LogInformation("Data Exchange and filling finished");
                 }
                 catch (Exception ex)
                 {

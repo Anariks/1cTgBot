@@ -25,7 +25,8 @@ builder.Host.UseSerilog();
 // Add services to the container.
 
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Error()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)
     .Enrich.FromLogContext()
     .WriteTo.File("log.txt", rollingInterval: RollingInterval.Day, fileSizeLimitBytes: 5000000)
     .WriteTo.Console()
@@ -41,15 +42,15 @@ builder.Services.AddHttpClient("tgclient")
     .AddTypedClient<ITelegramBotClient>((client, sp) =>
     {
         var configuration = sp.GetRequiredService<IOptionsMonitor<BotConfiguration>>();
-        return new TelegramBotClient(configuration.CurrentValue.BotAccessToken, client);
-    });    
+        return new TelegramBotClient(builder.Configuration["TelegramSettings:BotAccessToken"], client);
+    });
 
 builder.Services.AddTransient<TelegramService>();
 
 builder.Services.AddHostedService<InitService>();
 
 builder.Services.AddHttpClient("yyapi", client =>
-    {    
+    {
         client.BaseAddress = new Uri(builder.Configuration["YyApiData:Url"]);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
         "Basic", Convert.ToBase64String(
@@ -59,21 +60,22 @@ builder.Services.AddHttpClient("yyapi", client =>
     })
     .AddTypedClient<IProductApiClient>(client =>
         new ProductApiClient(client));
-  
+
 builder.Services.AddDbContext<BotDbContext>(options =>
     options.UseMySql(builder.Configuration.GetConnectionString("myDb"),
      new MySqlServerVersion(new Version(8, 0, 26)))
-     .EnableSensitiveDataLogging(),
-    contextLifetime: ServiceLifetime.Transient, 
+     ,//.EnableSensitiveDataLogging(),
+    contextLifetime: ServiceLifetime.Transient,
     optionsLifetime: ServiceLifetime.Singleton);
 
-builder.Services.AddTransient<DataFromXml>();
+builder.Services.AddTransient<RawDataFromXml>();
+builder.Services.AddTransient<OptimizeDataFromXml>();
 builder.Services.AddTransient<Authorization>();
 builder.Services.AddSingleton<IMessagesToUsers, MessageForUsers>();
 builder.Services.AddSingleton<IProductInfoService, ProductInfoService>();
 builder.Services.AddTransient<GetDataFromDb>();
-builder.Services.AddSingleton<DataToDatabase>();
-builder.Services.AddSingleton<DatabaseService>();
+builder.Services.AddTransient<DataToDatabase>();
+builder.Services.AddTransient<DatabaseService>();
 builder.Services.AddSingleton<MessageService>();
 
 var app = builder.Build();
@@ -92,5 +94,3 @@ if (app.Environment.IsDevelopment())
 app.MapControllers();
 
 app.Run();
-
-
