@@ -30,41 +30,44 @@ public class TelegramService
     {
         _logger.LogDebug("Message Handling Started");
 
-        if (update.Type != UpdateType.Message)
+        try
         {
-            await _telegramBotClient.SendTextMessageAsync(update.Message.Chat.Id, $"I cannot handle {update.Type}", cancellationToken: cancellationToken);
-            return;
-        }
 
-        var text = update.Message.Text;
-
-        if (text.Equals("/start"))
-        {
-            await _telegramBotClient.SendTextMessageAsync(update.Message.Chat.Id, "Welcome to our bot!", cancellationToken: cancellationToken);
-            return;
-        }
-
-        if (text.Equals("/update"))
-        {
-            try
+            if (update.Type != UpdateType.Message)
             {
-                //await _databaseService.FillDatabase();
+                await _telegramBotClient.SendTextMessageAsync(update.Message.Chat.Id, $"I cannot handle {update.Type}", cancellationToken: cancellationToken);
+                return;
+            }
+
+            var text = update.Message.Text;
+
+            if (text.Equals("/start"))
+            {
+                await _telegramBotClient.SendTextMessageAsync(update.Message.Chat.Id, "Welcome to our bot!", cancellationToken: cancellationToken);
+                return;
+            }
+
+            if (text.Equals("/update"))
+            {
+
+                _databaseService.FillDatabase().Wait();
                 await _telegramBotClient.SendTextMessageAsync(update.Message.Chat.Id, "Sorry, this options isn't enabled now", cancellationToken: cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex.Message);
-                await _telegramBotClient.SendTextMessageAsync(update.Message.Chat.Id, "Something went wrong (((" + ex.Message, cancellationToken: cancellationToken);
+
+                return;
             }
 
-            return;
+            var products = _productInfoService.GetProductInfoByQuery(text);
+
+            foreach (var message in _messageService.CreateMessageForProducts(products, (int)update.Message.From.Id))
+            {
+                await _telegramBotClient.SendTextMessageAsync(update.Message.Chat.Id, message, cancellationToken: cancellationToken);
+            }
         }
 
-        var products = _productInfoService.GetProductInfoByQuery(text);
-
-        foreach (var message in _messageService.CreateMessageForProducts(products, (int)update.Message.From.Id))
+        catch (Exception ex)
         {
-            await _telegramBotClient.SendTextMessageAsync(update.Message.Chat.Id, message, cancellationToken: cancellationToken);
+            _logger.LogError(ex.Message);
+            await _telegramBotClient.SendTextMessageAsync(update.Message.Chat.Id, "Something went wrong (((", cancellationToken: cancellationToken);
         }
     }
 }

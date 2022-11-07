@@ -7,7 +7,7 @@ using System.Globalization;
 using System.Threading;
 using Domain.XmlData;
 
-namespace Domain.Services;
+namespace Domain.XmlData;
 public class OptimizeDataFromXml
 {
     private readonly RawDataFromXml _rawDataFromXml;

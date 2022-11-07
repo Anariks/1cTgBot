@@ -11,19 +11,18 @@ public class DatabaseService
     public DatabaseService(DataToDatabase dataToDatabase)
     {
         _dataToDatabase = dataToDatabase;
-
     }
 
     public async Task FillDatabase()
     {
-        await _dataToDatabase.ClearDatabase();
+        //await _dataToDatabase.ClearDatabase();
         await _dataToDatabase.PushBrandsToDatabase();
-        await _dataToDatabase.PushProductsToDatabase();
         await _dataToDatabase.PushCategoriesToDatabase();
-        await _dataToDatabase.PushVariationsToDatabase();
-        await _dataToDatabase.PushVariationPricesToDatabase();
+        await _dataToDatabase.PushProductsToDatabase();
         await _dataToDatabase.PushPriceTypesToDatabase();
-        await _dataToDatabase.PushVariationStocksToDatabase();
+        await _dataToDatabase.PushVariationPricesToDatabase();
         await _dataToDatabase.PushStoragesToDatabase();
+        await _dataToDatabase.PushVariationStocksToDatabase();
+        await _dataToDatabase.PushVariationsToDatabase();
     }
 }

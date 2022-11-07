@@ -7,8 +7,8 @@ namespace Domain.Database;
 public class GetDataFromDb
 {
     private readonly BotDbContext _context;
-    
-    public GetDataFromDb(BotDbContext botDbContext) 
+
+    public GetDataFromDb(BotDbContext botDbContext)
     {
         _context = botDbContext;
     }
@@ -23,8 +23,8 @@ public class GetDataFromDb
         .Include(p => p.Brand)
         .Include(p => p.Variations)
             .ThenInclude(x => x.VariationPrices)
-                .ThenInclude(pt =>pt.PriceType)
-            .Include(x =>x.Variations)
+                .ThenInclude(pt => pt.PriceType)
+            .Include(x => x.Variations)
                 .ThenInclude(x => x.VariationStocks)
                     .ThenInclude(x => x.Storage)
         .ToList();
@@ -41,12 +41,11 @@ public class GetDataFromDb
         .Include(p => p.Brand)
         .Include(p => p.Variations)
             .ThenInclude(x => x.VariationPrices)
-                .ThenInclude(pt =>pt.PriceType)
-            .Include(x =>x.Variations)
+                .ThenInclude(pt => pt.PriceType)
+            .Include(x => x.Variations)
                 .ThenInclude(x => x.VariationStocks)
                     .ThenInclude(x => x.Storage)
         .ToList();
         return products;
     }
-
 }

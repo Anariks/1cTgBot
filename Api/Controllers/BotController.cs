@@ -16,8 +16,8 @@ public class BotController : ControllerBase
 
     }
 
-    [HttpPost( "api/bot")]
-    public async Task<IActionResult> Post([FromBody]Update update, CancellationToken cancellationToken = default)
+    [HttpPost("api/bot")]
+    public async Task<IActionResult> Post([FromBody] Update update, CancellationToken cancellationToken = default)
     {
         await _telegramService.HandleMessage(update, cancellationToken);
         return Ok();

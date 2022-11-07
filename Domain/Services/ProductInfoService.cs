@@ -20,7 +20,7 @@ public class ProductInfoService : IProductInfoService
     public List<Product> GetProductInfoByQuery(string query)
     {
         List<Product> products;
-        var isLink = (IsQueryALink(query)) ? true : false;
+        var isLink = IsQueryALink(query);
 
         if (isLink)
         {
