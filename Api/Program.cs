@@ -25,8 +25,8 @@ builder.Host.UseSerilog();
 // Add services to the container.
 
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information()
-    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Warning)
+    .MinimumLevel.Error()
+    .MinimumLevel.Override("Microsoft.EntityFrameworkCore.Database.Command", Serilog.Events.LogEventLevel.Error)
     .Enrich.FromLogContext()
     .WriteTo.File("log.txt", rollingInterval: RollingInterval.Day, fileSizeLimitBytes: 5000000)
     .WriteTo.Console()
